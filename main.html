@@ -16,6 +16,21 @@
 </head>
 
 <body>
-  <script src="js/scripts.js"></script>
+  <div id="gamePanel">
+    <div class="panel" id="leftPanel">
+      <button id="resetGame">restart game</button>
+    </div>
+    <div class="panel" id="centerPanel">
+      <h2> patties produced: <p class="pattyCount"></p></h2>
+      <div id="burgerPatty"> <img id="burgerPattyImage" src="images/burger_patty.jpg" onClick="pattyClick()"></div>
+    </div>
+    <div class="panel" id="rightPanel">
+      <div class="upgradeButton" id="addTechnician">
+        <h3 class="upgradeText">Hire a Technician! (50 patties)</h3>
+      </div>
+
+    </div>
+  </div>
 </body>
+<script src="src/script.js"></script>
 </html>
