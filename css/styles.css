@@ -18,6 +18,12 @@
     margin-left: -3px;
 }
 
+/*left panel*/
+#resetGame {
+    position: absolute;
+    bottom: 0;
+}
+
 /*center panel*/
 #burgerPatty {
     height: 300px;
