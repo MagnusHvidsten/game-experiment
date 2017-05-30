@@ -24,6 +24,10 @@
     bottom: 0;
 }
 
+#technicianUpgradeCost {
+    display: inline;
+}
+
 /*center panel*/
 #burgerPatty {
     height: 300px;
