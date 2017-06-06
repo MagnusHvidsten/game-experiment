@@ -24,7 +24,7 @@
     bottom: 0;
 }
 
-#technicianUpgradeCost {
+.upgradeCosts {
     display: inline;
 }
 

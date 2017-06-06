@@ -1,40 +1,41 @@
 // JavaScript file for project
 
 // Global constants
-const technicianCost = 50;
-const technicianInterval = 1000;
+const INTERVAL = 1000;
 
 // Global variables
 var upgradeTechnicianCount = 0;
-var technicianUpgradeCost = 1000;
 
 // Game variable
 var MyGame = {
   saved: 0,
   pattyCount: 0,
   upgrades: {
+    cursor: {
+      upgradeCursorCost: 15,
+      cursorClickValue: 1
+    },
     technicians: {
       technicianArray: [],
       level: 1,
       prodRate: 1,
       techInterval: 1000,
+      technicianCost: 50,
       technicianUpgradeCost: 1000
     }
   }
 }
 
-var pattyCount;
-
 var pattyClick = function() {
-  pattyCount++;
-  document.getElementsByClassName('pattyCount')[0].innerHTML = pattyCount;
+  MyGame.pattyCount += MyGame.upgrades.cursor.cursorClickValue;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
 }
 
 var resetGame = function() {
+  MyGame.pattyCount = 0;
+  //technicians
   var techObj = MyGame.upgrades.technicians;
-  pattyCount = 0;
   upgradeTechnicianCount = 0;
-  technicianUpgradeCost = 1000;
   //clear all intervals
   techObj.technicianArray.forEach(function(interval) {
     clearInterval(interval);
@@ -43,17 +44,19 @@ var resetGame = function() {
   techObj.level = 1;
   techObj.prodRate = 1;
   techObj.technicianUpgradeCost = 1000;
-  document.getElementsByClassName('pattyCount')[0].innerHTML = pattyCount;
-  document.getElementById("technicianUpgradeCost").innerHTML = technicianUpgradeCost/1000;
+  //cursor
+  var cursObj = MyGame.upgrades.cursor;
+  cursObj.cursorClickValue = 1;
+  cursObj.upgradeCursorCost = 15;
+  
+  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+  document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost/1000;
+  document.getElementsByClassName('cursorUpgradeCost')[0].innerHTML = cursObj.upgradeCursorCost;
 }
 
 var setValuesFromCookie = function() {
-  if(document.cookie === "") {
-    pattyCount = 0;
-  } else {
+  if(document.cookie !== "") {
     MyGame = JSON.parse(document.cookie);
-    pattyCount = MyGame.pattyCount;
-    technicianUpgradeCost = MyGame.upgrades.technicians.technicianUpgradeCost;
     //start auto patty generation again
     var techObj = MyGame.upgrades.technicians;
     var techArrLength = techObj.technicianArray.length;
@@ -65,8 +68,10 @@ var setValuesFromCookie = function() {
     }
     syncAutoCount();
   }
-  document.getElementsByClassName('pattyCount')[0].innerHTML = pattyCount;
-  document.getElementById("technicianUpgradeCost").innerHTML = technicianUpgradeCost/1000;
+  var cursObj = MyGame.upgrades.cursor;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+  document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost/1000;
+  document.getElementById("cursorUpgradeCost").innerHTML = cursObj.upgradeCursorCost;
 }
 
 var syncAutoCount = function() {
@@ -82,17 +87,17 @@ var syncAutoCount = function() {
   for(var i = 0; i < numbOfTechs; i++) {
     window.setTimeout(function() {
       techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval));
-    }, technicianInterval/numbOfTechs*i);
+    }, INTERVAL/numbOfTechs*i);
   }
 }
 
 var addTechnician = function() {
-  if(pattyCount >= technicianCost) {
-    pattyCount = pattyCount - technicianCost;
+  var techObj = MyGame.upgrades.technicians;
+  if(MyGame.pattyCount >= techObj.technicianCost) {
+    MyGame.pattyCount -= techObj.technicianCost;
     //update the remaining patties the user sees immediately
-    document.getElementsByClassName('pattyCount')[0].innerHTML = pattyCount;
+    document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
     //add technician to MyGame 
-    var techObj = MyGame.upgrades.technicians;
     var amount = techObj.prodRate;
     var techInterval = techObj.techInterval;
     techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval));
@@ -101,7 +106,7 @@ var addTechnician = function() {
 }
 
 var upgradeTechnician = function() {
-  if(pattyCount > technicianUpgradeCost) {
+  if(MyGame.pattyCount >= techObj.technicianUpgradeCost) {
     // set global variable to inform on upgrade next time interval is executed
     var techObj = MyGame.upgrades.technicians;
     upgradeTechnicianCount = techObj.technicianArray.length;
@@ -109,28 +114,41 @@ var upgradeTechnician = function() {
     techObj.level += 1;
     techObj.prodRate *= 2;
     // deduct cost
-    pattyCount -= technicianUpgradeCost;
-    // increse cost
-    var cost = Math.ceil(5*Math.pow(techObj.level, 1.2));
-    technicianUpgradeCost = cost;
-    techObj.technicianUpgradeCost = cost*1000;
-    document.getElementById("technicianUpgradeCost").innerHTML = cost;
+    MyGame.pattyCount -= techObj.technicianUpgradeCost;
+    // increase cost
+    techObj.technicianUpgradeCost *= 10;
+    document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
     syncAutoCount();
+  }
+}
+
+var upgradeCursor = function() {
+  var cursObj = MyGame.upgrades.cursor
+  if(MyGame.pattyCount >= cursObj.upgradeCursorCost) {
+    //deduct cost
+    MyGame.pattyCount -= cursObj.upgradeCursorCost;
+    //double the effect by clicking on patty
+    cursObj.cursorClickValue *= 2;
+    //raise the cost of upgrade
+    cursObj.upgradeCursorCost *= 10;
+    //update UI
+    document.getElementById("cursorUpgradeCost").innerHTML = cursObj.upgradeCursorCost;
+    document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
   }
 }
 
 var setEventListeners = function() {
   //reset 
-  var resetButton = document.getElementById('resetGame');
-  resetButton.addEventListener("click", resetGame, false);
+  document.getElementById('resetGame').addEventListener("click", resetGame, false);
+
+  //upgrade cursor
+  document.getElementById('upgradeCursor').addEventListener("click", upgradeCursor, false);
 
   //purchase technician 
-  var resetButton = document.getElementById('addTechnician');
-  resetButton.addEventListener("click", addTechnician, false);
+  document.getElementById('addTechnician').addEventListener("click", addTechnician, false);
 
   //upgrade technician
-  var resetButton = document.getElementById('upgradeTechnician');
-  resetButton.addEventListener("click", upgradeTechnician, false);
+  document.getElementById('upgradeTechnician').addEventListener("click", upgradeTechnician, false);
   
 }
 
@@ -154,8 +172,8 @@ function autoPatty(amountToAdd) {
     syncAutoCount();
 
   }
-  pattyCount = pattyCount + amountToAdd;
-  document.getElementsByClassName('pattyCount')[0].innerHTML = pattyCount;
+  MyGame.pattyCount += amountToAdd;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
 }
 
 //ensure cookies, event listeners and such are setup on pageload
@@ -166,7 +184,6 @@ var onPageLoad = function () {
 onPageLoad();
 
 var update = function() {
-  MyGame.pattyCount = pattyCount;
   MyGame.saved = 1;
   document.cookie = JSON.stringify(MyGame);
 }
