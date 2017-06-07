@@ -50,6 +50,10 @@
     display: inline;
 }
 
+#patties {
+    text-align: center;
+}
+
 /*right panel*/
 
 .upgradeButton {

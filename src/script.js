@@ -44,14 +44,16 @@ var resetGame = function() {
   techObj.level = 1;
   techObj.prodRate = 1;
   techObj.technicianUpgradeCost = 1000;
+  techObj.technicianCost = 50;
   //cursor
   var cursObj = MyGame.upgrades.cursor;
   cursObj.cursorClickValue = 1;
   cursObj.upgradeCursorCost = 15;
   
   document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
-  document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost/1000;
-  document.getElementsByClassName('cursorUpgradeCost')[0].innerHTML = cursObj.upgradeCursorCost;
+  document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
+  document.getElementById('cursorUpgradeCost').innerHTML = cursObj.upgradeCursorCost;
+  document.getElementById('technicianCost').innerHTML = techObj.technicianCost;
 }
 
 var setValuesFromCookie = function() {
@@ -61,16 +63,15 @@ var setValuesFromCookie = function() {
     var techObj = MyGame.upgrades.technicians;
     var techArrLength = techObj.technicianArray.length;
     techObj.technicianArray = [];
-    var amount = techObj.prodRate;
     var techInterval = techObj.techInterval;
     for(var i = 0; i < techArrLength; i++) {
-      techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval));
+      techObj.technicianArray.push(window.setInterval(function(){autoPatty(techObj.prodRate)}, techInterval));
     }
     syncAutoCount();
   }
   var cursObj = MyGame.upgrades.cursor;
   document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
-  document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost/1000;
+  document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
   document.getElementById("cursorUpgradeCost").innerHTML = cursObj.upgradeCursorCost;
 }
 
@@ -79,24 +80,34 @@ var syncAutoCount = function() {
   var numbOfTechs = techObj.technicianArray.length;
   var amount = techObj.prodRate;
   var techInterval = techObj.techInterval;
-  techObj.technicianArray.forEach(function(el) {
-    clearInterval(el);
-  });
+  var placeHolderTechnicianArray = techObj.technicianArray;
   techObj.technicianArray = [];
-  
+
   for(var i = 0; i < numbOfTechs; i++) {
     window.setTimeout(function() {
       techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval));
     }, INTERVAL/numbOfTechs*i);
+    //only stop old invervals after new has been created to not create a gap in production
+    window.setTimeout(function() {
+      placeHolderTechnicianArray.forEach(function(el) {
+        clearInterval(el);
+      });
+    }, INTERVAL);
   }
 }
 
 var addTechnician = function() {
   var techObj = MyGame.upgrades.technicians;
   if(MyGame.pattyCount >= techObj.technicianCost) {
-    MyGame.pattyCount -= techObj.technicianCost;
+
     //update the remaining patties the user sees immediately
+    MyGame.pattyCount -= techObj.technicianCost;
     document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+
+    //increase cost
+    techObj.technicianCost = Math.ceil(techObj.technicianCost*1.5);
+    document.getElementById('technicianCost').innerHTML = techObj.technicianCost;
+
     //add technician to MyGame 
     var amount = techObj.prodRate;
     var techInterval = techObj.techInterval;
@@ -106,9 +117,9 @@ var addTechnician = function() {
 }
 
 var upgradeTechnician = function() {
+  var techObj = MyGame.upgrades.technicians;
   if(MyGame.pattyCount >= techObj.technicianUpgradeCost) {
     // set global variable to inform on upgrade next time interval is executed
-    var techObj = MyGame.upgrades.technicians;
     upgradeTechnicianCount = techObj.technicianArray.length;
     // double the tech level
     techObj.level += 1;
@@ -116,7 +127,7 @@ var upgradeTechnician = function() {
     // deduct cost
     MyGame.pattyCount -= techObj.technicianUpgradeCost;
     // increase cost
-    techObj.technicianUpgradeCost *= 10;
+    techObj.technicianUpgradeCost = Math.ceil(techObj.technicianUpgradeCost*1.5);
     document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
     syncAutoCount();
   }
@@ -130,7 +141,7 @@ var upgradeCursor = function() {
     //double the effect by clicking on patty
     cursObj.cursorClickValue *= 2;
     //raise the cost of upgrade
-    cursObj.upgradeCursorCost *= 10;
+    cursObj.upgradeCursorCost = Math.ceil(cursObj.upgradeCursorCost*1.5);
     //update UI
     document.getElementById("cursorUpgradeCost").innerHTML = cursObj.upgradeCursorCost;
     document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
