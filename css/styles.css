@@ -18,6 +18,9 @@
     margin-left: -3px;
 }
 
+/*#leftPanel {
+    background-color: grey;
+}*/
 /*left panel*/
 #resetGame {
     position: absolute;
@@ -58,9 +61,9 @@
 
 .upgradeButton {
     position: relative;
-    border: 1px solid grey;
+    border: 1px solid black
+    ;
     width: 98%;
-    height: 50px;
     margin: 0 auto;
     text-align: center;
 }

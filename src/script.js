@@ -2,6 +2,8 @@
 
 // Global constants
 const INTERVAL = 1000;
+const UPGRADE_COST_MULTIPLIER = 5;
+const PRODUCER_COST_MULTIPLIER = 1.5;
 
 // Global variables
 var upgradeTechnicianCount = 0;
@@ -12,7 +14,7 @@ var MyGame = {
   pattyCount: 0,
   upgrades: {
     cursor: {
-      upgradeCursorCost: 15,
+      upgradeCursorCost: 100,
       cursorClickValue: 1
     },
     technicians: {
@@ -20,15 +22,19 @@ var MyGame = {
       level: 1,
       prodRate: 1,
       techInterval: 1000,
-      technicianCost: 50,
+      technicianCost: 20,
       technicianUpgradeCost: 1000
+    },
+    research: {
+      researchMultiplier: 1,
+      researchCost: 10000
     }
   }
 }
 
 var pattyClick = function() {
   MyGame.pattyCount += MyGame.upgrades.cursor.cursorClickValue;
-  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
 }
 
 var resetGame = function() {
@@ -44,13 +50,16 @@ var resetGame = function() {
   techObj.level = 1;
   techObj.prodRate = 1;
   techObj.technicianUpgradeCost = 1000;
-  techObj.technicianCost = 50;
+  techObj.technicianCost = 20;
   //cursor
   var cursObj = MyGame.upgrades.cursor;
   cursObj.cursorClickValue = 1;
-  cursObj.upgradeCursorCost = 15;
-  
-  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+  cursObj.upgradeCursorCost = 100;
+  //research
+  var researchObj = MyGame.upgrades.research;
+  researchObj.researchCost = 10000;
+  researchObj.researchMultiplier = 1;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
   document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
   document.getElementById('cursorUpgradeCost').innerHTML = cursObj.upgradeCursorCost;
   document.getElementById('technicianCost').innerHTML = techObj.technicianCost;
@@ -59,19 +68,22 @@ var resetGame = function() {
 var setValuesFromCookie = function() {
   if(document.cookie !== "") {
     MyGame = JSON.parse(document.cookie);
-    //start auto patty generation again
     var techObj = MyGame.upgrades.technicians;
+    var cursObj = MyGame.upgrades.cursor;
+    //start auto patty generation again
     var techArrLength = techObj.technicianArray.length;
     techObj.technicianArray = [];
     var techInterval = techObj.techInterval;
     for(var i = 0; i < techArrLength; i++) {
-      techObj.technicianArray.push(window.setInterval(function(){autoPatty(techObj.prodRate)}, techInterval));
+      techObj.technicianArray.push(window.setInterval(function(){autoPatty(techObj.prodRate)}, techInterval/MyGame.upgrades.research.researchMultiplier));
     }
     syncAutoCount();
   }
+  var techObj = MyGame.upgrades.technicians;
   var cursObj = MyGame.upgrades.cursor;
-  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
   document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
+  document.getElementById('technicianCost').innerHTML = techObj.technicianCost;
   document.getElementById("cursorUpgradeCost").innerHTML = cursObj.upgradeCursorCost;
 }
 
@@ -85,14 +97,14 @@ var syncAutoCount = function() {
 
   for(var i = 0; i < numbOfTechs; i++) {
     window.setTimeout(function() {
-      techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval));
-    }, INTERVAL/numbOfTechs*i);
+      techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval/MyGame.upgrades.research.researchMultiplier));
+    }, (techInterval/MyGame.upgrades.research.researchMultiplier)/numbOfTechs*i);
     //only stop old invervals after new has been created to not create a gap in production
     window.setTimeout(function() {
       placeHolderTechnicianArray.forEach(function(el) {
         clearInterval(el);
       });
-    }, INTERVAL);
+    }, techInterval/MyGame.upgrades.research.researchMultiplier);
   }
 }
 
@@ -102,16 +114,16 @@ var addTechnician = function() {
 
     //update the remaining patties the user sees immediately
     MyGame.pattyCount -= techObj.technicianCost;
-    document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+    document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
 
     //increase cost
-    techObj.technicianCost = Math.ceil(techObj.technicianCost*1.5);
+    techObj.technicianCost = Math.ceil(techObj.technicianCost*PRODUCER_COST_MULTIPLIER);
     document.getElementById('technicianCost').innerHTML = techObj.technicianCost;
 
     //add technician to MyGame 
     var amount = techObj.prodRate;
     var techInterval = techObj.techInterval;
-    techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval));
+    techObj.technicianArray.push(window.setInterval(function(){autoPatty(amount)}, techInterval/MyGame.upgrades.research.researchMultiplier));
     syncAutoCount();
   }
 }
@@ -127,7 +139,7 @@ var upgradeTechnician = function() {
     // deduct cost
     MyGame.pattyCount -= techObj.technicianUpgradeCost;
     // increase cost
-    techObj.technicianUpgradeCost = Math.ceil(techObj.technicianUpgradeCost*1.5);
+    techObj.technicianUpgradeCost = Math.ceil(techObj.technicianUpgradeCost*UPGRADE_COST_MULTIPLIER);
     document.getElementById("technicianUpgradeCost").innerHTML = techObj.technicianUpgradeCost;
     syncAutoCount();
   }
@@ -139,12 +151,22 @@ var upgradeCursor = function() {
     //deduct cost
     MyGame.pattyCount -= cursObj.upgradeCursorCost;
     //double the effect by clicking on patty
-    cursObj.cursorClickValue *= 2;
+    cursObj.cursorClickValue += 1;
     //raise the cost of upgrade
-    cursObj.upgradeCursorCost = Math.ceil(cursObj.upgradeCursorCost*1.5);
+    cursObj.upgradeCursorCost = Math.ceil(cursObj.upgradeCursorCost*PRODUCER_COST_MULTIPLIER);
     //update UI
     document.getElementById("cursorUpgradeCost").innerHTML = cursObj.upgradeCursorCost;
-    document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+    document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
+  }
+}
+
+var researchUpgrade = function() {
+  var researchObj = MyGame.upgrades.research;
+  if(MyGame.pattyCount >= researchObj.researchCost) {
+    MyGame.upgrades.research.researchMultiplier *= 1.5;
+    MyGame.pattyCount -= researchObj.researchCost;
+    document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
+    syncAutoCount();
   }
 }
 
@@ -160,6 +182,10 @@ var setEventListeners = function() {
 
   //upgrade technician
   document.getElementById('upgradeTechnician').addEventListener("click", upgradeTechnician, false);
+  
+  //research upgrade
+  document.getElementById('researchUpgrade').addEventListener("click", researchUpgrade, false);
+  
   
 }
 
@@ -184,7 +210,7 @@ function autoPatty(amountToAdd) {
 
   }
   MyGame.pattyCount += amountToAdd;
-  document.getElementsByClassName('pattyCount')[0].innerHTML = MyGame.pattyCount;
+  document.getElementsByClassName('pattyCount')[0].innerHTML = new Intl.NumberFormat().format(MyGame.pattyCount);
 }
 
 //ensure cookies, event listeners and such are setup on pageload

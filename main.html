@@ -18,21 +18,27 @@
 <body>
   <div id="gamePanel">
     <div class="panel" id="leftPanel">
-      <div class="upgradeButton" id="upgradeCursor">
-        <h3 class="upgradeText">Clicking is twice as efficient! (<p class="upgradeCosts" id="cursorUpgradeCost">15</p> patties)</h3>
-      </div>
       <div class="upgradeButton" id="upgradeTechnician">
-        <h3 class="upgradeText">technicians work twice as fast! (<p class="upgradeCosts" id="technicianUpgradeCost">1000</p> patties)</h3>
+        <h3 class="upgradeText">Technicians work twice as fast! (<p class="upgradeCosts" id="technicianUpgradeCost">1000</p> patties)</h3>
+      </div>
+      <div class="upgradeButton" id="researchUpgrade">
+        <h3 class="upgradeText">Research finds the optimal growth temperature! X1.5 production (<p class="upgradeCosts" id="researchUpgradeCost">10,000</p> patties)</h3>
       </div>
       <button id="resetGame">restart game</button>
     </div>
     <div class="panel" id="centerPanel">
-      <h2 id="patties"> patties: <p class="pattyCount"></p></h2>
+      <h2 id="patties"> Patties: <p class="pattyCount"></p></h2>
       <div id="burgerPatty"> <img id="burgerPattyImage" src="images/burger_patty.jpg" onClick="pattyClick()"></div>
     </div>
     <div class="panel" id="rightPanel">
-      <div class="upgradeButton" id="addTechnician">
-        <h3 class="upgradeText">Hire a Technician! (<p class="upgradeCosts" id="technicianCost">50</p> patties)</h3>
+      <div class="upgradeButton" id="addTechnician" onmouseover="createTooltip()">
+        <h3 class="upgradeText">Hire a Technician! (<p class="upgradeCosts" id="technicianCost">20</p> patties)</h3>
+      </div>
+      <div class="upgradeButton" id="upgradeCursor">
+        <h3 class="upgradeText">Clicking adds an additional patty! (<p class="upgradeCosts" id="cursorUpgradeCost">100</p> patties)</h3>
+      </div>
+      <div class="upgradeButton" id="upgradeCursor">
+        <h3 class="upgradeText">Expand production facility! (<p class="upgradeCosts" id="cursorUpgradeCost">100</p> patties)</h3>
       </div>
 
     </div>
